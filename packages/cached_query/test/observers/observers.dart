@@ -74,9 +74,10 @@ class QueryFailObserver extends QueryObserver {
   void onError(
     Cacheable<dynamic> query,
     StackTrace stackTrace,
+    errorState,
   ) {
     onFailEvent(query, stackTrace);
-    super.onError(query, stackTrace);
+    super.onError(query, stackTrace, errorState);
   }
 }
 
@@ -110,8 +111,9 @@ class MutationErrorObserver extends QueryObserver {
   void onMutationError(
     Mutation<dynamic, dynamic> mutation,
     StackTrace stackTrace,
+    errorState,
   ) {
     onMutationEvent(mutation, stackTrace);
-    super.onMutationError(mutation, stackTrace);
+    super.onMutationError(mutation, stackTrace, errorState);
   }
 }

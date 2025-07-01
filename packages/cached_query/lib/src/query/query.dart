@@ -142,7 +142,7 @@ final class Query<T> extends Cacheable<QueryStatus<T>> {
     for (final observer in observers) {
       observer.onChange(this, state);
       if (state case QueryError(:final stackTrace)) {
-        observer.onError(this, stackTrace);
+        observer.onError(this, stackTrace, state);
       }
     }
 

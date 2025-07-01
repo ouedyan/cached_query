@@ -199,7 +199,7 @@ final class InfiniteQuery<T, Arg>
     for (final observer in observers) {
       observer.onChange(this, state);
       if (state case InfiniteQueryError(:final stackTrace)) {
-        observer.onError(this, stackTrace);
+        observer.onError(this, stackTrace, state);
       }
     }
     _state = state;

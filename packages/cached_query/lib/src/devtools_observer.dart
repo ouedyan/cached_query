@@ -18,7 +18,7 @@ class DevtoolsObserver implements QueryObserver {
   }
 
   @override
-  void onError(Cacheable<dynamic> query, StackTrace stackTrace) {
+  void onError(Cacheable<dynamic> query, StackTrace stackTrace, errorState) {
     _emit("query_error", {"key": query.key});
   }
 
@@ -39,6 +39,7 @@ class DevtoolsObserver implements QueryObserver {
   void onMutationError(
     Mutation<dynamic, dynamic> mutation,
     StackTrace stackTrace,
+    errorState,
   ) {
     _emit("mutation_error", {"key": mutation.key});
   }

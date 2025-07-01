@@ -132,6 +132,7 @@ class QueryLoggingObserver implements QueryObserver {
   Future<void> onError(
     Cacheable<dynamic> query,
     StackTrace stackTrace,
+    errorState,
   ) async {
     if (!queryError) return;
     var error = "";
@@ -158,6 +159,7 @@ class QueryLoggingObserver implements QueryObserver {
   void onMutationError(
     Mutation<dynamic, dynamic> mutation,
     StackTrace stackTrace,
+    errorState,
   ) {
     if (!mutationError) return;
     final state = mutation.state as MutationError<dynamic>;

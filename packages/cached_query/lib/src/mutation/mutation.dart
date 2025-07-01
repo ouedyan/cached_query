@@ -206,7 +206,7 @@ class Mutation<ReturnType, Arg> {
     _state = newState;
     if (state case MutationError(:final stackTrace)) {
       for (final ob in CachedQuery.instance.observers) {
-        ob.onMutationError(this, stackTrace);
+        ob.onMutationError(this, stackTrace, state as MutationError<ReturnType>);
       }
     }
   }

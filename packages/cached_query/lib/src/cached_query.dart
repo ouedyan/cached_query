@@ -209,17 +209,18 @@ class CachedQuery {
   ///
   /// Pass a key to delete a query at the given key. Will invalidate both
   /// infinite queries and queries.
+  /// Invalidates the whole cache if no key or filterFn is provided.
   void deleteCache({
     Object? key,
     bool deleteStorage = false,
     KeyFilterFunc? filterFn,
   }) {
-    for (final ob in observers) {
-      ob.onQueryDeletion(key);
-    }
     if (filterFn != null) {
       final queries = _filterQueryKey(filter: filterFn).toList();
       for (final query in queries) {
+        for (final ob in observers) {
+          ob.onQueryDeletion(query.unencodedKey);
+        }
         _queryCache.remove(query.key);
         if (deleteStorage && storage != null) {
           storage!.delete(query.key);
@@ -228,6 +229,9 @@ class CachedQuery {
     } else if (key != null) {
       final stringKey = encodeKey(key);
       if (_queryCache.containsKey(stringKey)) {
+        for (final ob in observers) {
+          ob.onQueryDeletion(key);
+        }
         _queryCache.remove(stringKey);
       }
       if (deleteStorage && storage != null) {
@@ -235,6 +239,9 @@ class CachedQuery {
       }
     } else {
       // other wise invalidate the whole cache
+      for (final ob in observers) {
+        ob.onQueryDeletion(null);
+      }
       _queryCache = {};
       if (deleteStorage && storage != null) {
         storage!.deleteAll();
@@ -262,17 +269,14 @@ class CachedQuery {
     if (keys == null && filterFn == null) {
       queries.addAll(
         _queryCache.values.where(
-          (q) =>
-              (refetchActive && q.hasListener) ||
-              (refetchInactive && !q.hasListener),
+          (q) => (refetchActive && q.hasListener) || (refetchInactive && !q.hasListener),
         ),
       );
     } else {
       if (filterFn != null) {
         queries.addAll(
           _filterQueryKey(filter: filterFn).where((q) {
-            return (refetchActive && q.hasListener) ||
-                (refetchInactive && !q.hasListener);
+            return (refetchActive && q.hasListener) || (refetchInactive && !q.hasListener);
           }),
         );
       }
@@ -282,8 +286,7 @@ class CachedQuery {
           final k = encodeKey(key);
           if (_queryCache.containsKey(k)) {
             final query = _queryCache[k]!;
-            if ((refetchActive && query.hasListener) ||
-                (refetchInactive && !query.hasListener)) {
+            if ((refetchActive && query.hasListener) || (refetchInactive && !query.hasListener)) {
               queries.add(query);
             }
           }
@@ -309,7 +312,6 @@ class CachedQuery {
   Iterable<Cacheable<Object?>> _filterQueryKey({
     required KeyFilterFunc filter,
   }) {
-    return _queryCache.values
-        .where((element) => filter(element.unencodedKey, element.key));
+    return _queryCache.values.where((element) => filter(element.unencodedKey, element.key));
   }
 }

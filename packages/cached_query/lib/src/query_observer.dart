@@ -22,6 +22,7 @@ abstract class QueryObserver {
   ) {}
 
   /// Called when an infinite query or query are deleted from the cache
+  /// When the whole cache is deleted, the key will be null.
   void onQueryDeletion(Object? key) {}
 
   /// Called when a query state is updated.
@@ -36,12 +37,14 @@ abstract class QueryObserver {
   void onError(
     Cacheable<dynamic> query,
     StackTrace stackTrace,
+    QueryState<dynamic> errorState,
   ) {}
 
   /// Called if a mutation error happens.
   void onMutationError(
     Mutation<dynamic, dynamic> mutation,
     StackTrace stackTrace,
+    MutationError<dynamic> errorState,
   ) {}
 
   /// Called when the state of a mutation changes.
