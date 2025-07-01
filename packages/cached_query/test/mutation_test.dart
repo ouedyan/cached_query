@@ -116,7 +116,7 @@ void main() {
 
       final mutation = Mutation<String, void>(
         queryFn: query,
-        onStartMutation: (_) {
+        onStartMutation: (_, __) {
           responses.add(onStart);
         },
       );
@@ -135,12 +135,12 @@ void main() {
 
       final mutation = Mutation<String, void>(
         queryFn: query,
-        onStartMutation: (_) {
+        onStartMutation: (_, __) {
           final initialData = [...responses];
           responses.add(onStart);
           return initialData;
         },
-        onError: (arg, error, fallback) => responses = fallback as List<String>,
+        onError: (arg, error, fallback, mutation) => responses = fallback as List<String>,
       );
       await mutation.mutate();
       expect(responses, <String>[]);
@@ -158,7 +158,7 @@ void main() {
 
       final mutation = Mutation<String, void>(
         queryFn: query,
-        onSuccess: (_, __) {
+        onSuccess: (_, __, ___) {
           responses.add(onSuccess);
         },
       );
@@ -169,7 +169,7 @@ void main() {
       int errorCount = 0;
       final mutation = Mutation<String, void>(
         queryFn: (_) async => throw "Should throw",
-        onError: (_, __, ___) {
+        onError: (_, __, ___, ____) {
           errorCount++;
         },
       );

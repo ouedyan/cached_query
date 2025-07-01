@@ -42,8 +42,8 @@ final class InfiniteQuery<T, Arg>
     int? prefetchPages,
     QueryConfig<InfiniteQueryData<T, Arg>>? config,
     InfiniteQueryData<T, Arg>? initialData,
-    OnQueryErrorCallback? onError,
-    OnQuerySuccessCallback<InfiniteQueryData<T, Arg>>? onSuccess,
+    OnQueryErrorCallback<InfiniteQueryStatus<T, Arg>>? onError,
+    OnQuerySuccessCallback<InfiniteQueryData<T, Arg>, InfiniteQueryStatus<T, Arg>>? onSuccess,
     CachedQuery? cache,
     OnPageRefetched<T, Arg>? onPageRefetched,
   }) {
@@ -97,8 +97,8 @@ final class InfiniteQuery<T, Arg>
   InfiniteQuery._internal({
     required GetNextArg<T, Arg> getNextArg,
     required QueryController<InfiniteQueryData<T, Arg>> controller,
-    OnQueryErrorCallback? onError,
-    OnQuerySuccessCallback<InfiniteQueryData<T, Arg>>? onSuccess,
+    OnQueryErrorCallback<InfiniteQueryStatus<T, Arg>>? onError,
+    OnQuerySuccessCallback<InfiniteQueryData<T, Arg>, InfiniteQueryStatus<T, Arg>>? onSuccess,
   })  : _getNextArg = getNextArg,
         _onSuccess = onSuccess,
         _onError = onError,
@@ -130,8 +130,8 @@ final class InfiniteQuery<T, Arg>
   bool get stale => _controller.stale;
   bool get hasListener => _stateSubject.hasListener;
 
-  final OnQuerySuccessCallback<InfiniteQueryData<T, Arg>>? _onSuccess;
-  final OnQueryErrorCallback? _onError;
+  final OnQuerySuccessCallback<InfiniteQueryData<T, Arg>, InfiniteQueryStatus<T, Arg>>? _onSuccess;
+  final OnQueryErrorCallback<InfiniteQueryStatus<T, Arg>>? _onError;
 
   final QueryController<InfiniteQueryData<T, Arg>> _controller;
   late final BehaviorSubject<InfiniteQueryStatus<T, Arg>> _stateSubject;
@@ -223,7 +223,7 @@ final class InfiniteQuery<T, Arg>
             ),
           );
         case FetchError(:final error, :final stackTrace):
-          _onError?.call(error);
+          _onError?.call(error, this);
           _setState(
             InfiniteQueryStatus.error(
               error: error,
@@ -233,11 +233,11 @@ final class InfiniteQuery<T, Arg>
             ),
           );
         case StorageError(:final error, :final stackTrace):
-          _onError?.call(error);
+          _onError?.call(error, this);
         case DataUpdated(:final data):
           _setState(state.copyWithData(data as InfiniteQueryData<T, Arg>));
         case Success(:final data, :final timeCreated):
-          _onSuccess?.call(data as InfiniteQueryData<T, Arg>);
+          _onSuccess?.call(data as InfiniteQueryData<T, Arg>, this);
           _setState(
             InfiniteQueryStatus.success(
               data: data as InfiniteQueryData<T, Arg>,

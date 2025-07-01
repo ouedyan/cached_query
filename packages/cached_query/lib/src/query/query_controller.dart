@@ -3,12 +3,15 @@ part of "./_query.dart";
 /// On success is called when the query function is executed successfully.
 ///
 /// Passes the returned data.
-typedef OnQuerySuccessCallback<T> = void Function(T data);
+typedef OnQuerySuccessCallback<T, State> = void Function(T data, Cacheable<State> query);
 
 /// On success is called when the query function is executed successfully.
 ///
 /// Passes the error through.
-typedef OnQueryErrorCallback = void Function(dynamic error);
+typedef OnQueryErrorCallback<State> = void Function(
+  dynamic error,
+  Cacheable<State> query,
+);
 
 class FetchOptions {
   const FetchOptions();
@@ -63,11 +66,7 @@ final class QueryController<T> {
   /// Whether the current query is marked as stale and therefore requires a
   /// refetch.
   bool get stale {
-    return state.timeCreated
-            .add(config.refetchDuration)
-            .isBefore(DateTime.now()) ||
-        state.data == null ||
-        _invalidated;
+    return state.timeCreated.add(config.refetchDuration).isBefore(DateTime.now()) || state.data == null || _invalidated;
   }
 
   /// The config for this specific query.
@@ -87,8 +86,7 @@ final class QueryController<T> {
   }
 
   /// Broadcast stream controller that reacts to changes to the query state
-  final StreamController<ControllerAction> _streamController =
-      StreamController(sync: true);
+  final StreamController<ControllerAction> _streamController = StreamController(sync: true);
 
   bool _hasListener = false;
 
@@ -162,8 +160,7 @@ final class QueryController<T> {
     required bool forceRefetch,
     required FetchOptions options,
   }) async {
-    if ((!stale && !forceRefetch) ||
-        !config.shouldFetch(key, state.data, state.timeCreated)) {
+    if ((!stale && !forceRefetch) || !config.shouldFetch(key, state.data, state.timeCreated)) {
       return;
     }
     _streamController.add(
@@ -185,8 +182,7 @@ final class QueryController<T> {
       }
     }
 
-    final shouldContinue =
-        config.shouldFetch(key, state.data, state.timeCreated);
+    final shouldContinue = config.shouldFetch(key, state.data, state.timeCreated);
 
     if ((stale || forceRefetch) && shouldContinue) {
       try {
@@ -218,8 +214,7 @@ final class QueryController<T> {
   /// Sets the new state.
   void _setState(ControllerState<T> newState) {
     state = newState;
-    _streamController
-        .add(Success(data: state.data, timeCreated: state.timeCreated));
+    _streamController.add(Success(data: state.data, timeCreated: state.timeCreated));
     // for (final observer in _cache.observers) {
     //   observer.onChange(this as QueryBase, newState);
     // }
@@ -268,13 +263,9 @@ final class QueryController<T> {
     final storedData = await _cache.storage?.get(key);
 
     // In-case the developer changes the storage duration in the code.
-    final expiryHasChanged =
-        storedData?.storageDuration != config.storageDuration;
+    final expiryHasChanged = storedData?.storageDuration != config.storageDuration;
 
-    if (storedData == null ||
-        storedData.isExpired ||
-        storedData.data == null ||
-        expiryHasChanged) {
+    if (storedData == null || storedData.isExpired || storedData.data == null || expiryHasChanged) {
       return null;
     }
 

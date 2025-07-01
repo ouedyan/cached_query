@@ -663,7 +663,7 @@ void main() async {
         queryFn: (page) {
           return Future.value(page.toString());
         },
-        onSuccess: (r) => response = r.pages.first.toString(),
+        onSuccess: (r, query) => response = r.pages.first.toString(),
         getNextArg: (state) => (state?.pages.length ?? 0) + 1,
       );
       final res = await query.fetch();
@@ -679,7 +679,7 @@ void main() async {
         queryFn: (page) {
           return Future.value(page.toString());
         },
-        onSuccess: (r) {
+        onSuccess: (r, query) {
           response = r.pages.last.toString();
         },
         getNextArg: (state) => (state?.pages.length ?? 0) + 1,
@@ -697,8 +697,8 @@ void main() async {
         queryFn: (page) {
           throw "error";
         },
-        onSuccess: (dynamic r) => response = r.toString(),
-        onError: (dynamic e) => error = e,
+        onSuccess: (dynamic r, query) => response = r.toString(),
+        onError: (dynamic e, query) => error = e,
         getNextArg: (state) => (state?.pages.length ?? 0) + 1,
       );
       final res = await query.fetch();
@@ -720,8 +720,8 @@ void main() async {
           }
           return Future.value(page.toString());
         },
-        onError: (dynamic e) => error = e,
-        onSuccess: (_) => count++,
+        onError: (dynamic e, query) => error = e,
+        onSuccess: (_, __) => count++,
         getNextArg: (state) => (state?.pages.length ?? 0) + 1,
       );
       await query.fetch();

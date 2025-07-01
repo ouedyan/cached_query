@@ -8,17 +8,18 @@ import '../cached_query.dart';
 import 'mutation_cache.dart';
 
 /// Called when the [queryFn] as completed with no error.
-typedef OnSuccessCallback<T, Arg> = FutureOr<void> Function(T res, Arg arg);
+typedef OnSuccessCallback<T, Arg> = FutureOr<void> Function(T res, Arg arg, Mutation<T, Arg> mutation);
 
 /// Called when the [queryFn] as completed with an error.
-typedef OnErrorCallback<Arg> = FutureOr<void> Function(
+typedef OnErrorCallback<ReturnType, Arg> = FutureOr<void> Function(
   Arg arg,
   Object error,
   Object? fallback,
+  Mutation<ReturnType, Arg> mutation,
 );
 
 /// Called when [Mutation] has started.
-typedef OnStartMutateCallback<Arg> = FutureOr<dynamic> Function(Arg arg);
+typedef OnStartMutateCallback<ReturnType, Arg> = FutureOr<dynamic> Function(Arg arg, Mutation<ReturnType, Arg> mutation);
 
 /// The asynchronous query function.
 typedef MutationQueryCallback<ReturnType, Arg> = Future<ReturnType> Function(
@@ -52,9 +53,9 @@ class Mutation<ReturnType, Arg> {
   /// A stringified key to reference the mutation.
   final String? key;
 
-  final OnStartMutateCallback<Arg>? _onStartMutation;
+  final OnStartMutateCallback<ReturnType, Arg>? _onStartMutation;
   final OnSuccessCallback<ReturnType, Arg>? _onSuccess;
-  final OnErrorCallback<Arg>? _onError;
+  final OnErrorCallback<ReturnType, Arg>? _onError;
   final MutationQueryCallback<ReturnType, Arg> _queryFn;
   final List<Object>? _invalidateQueries;
   final List<Object>? _refetchQueries;
@@ -74,9 +75,9 @@ class Mutation<ReturnType, Arg> {
   Mutation._internal({
     this.key,
     required MutationCache cache,
-    OnStartMutateCallback<Arg>? onStartMutation,
+    OnStartMutateCallback<ReturnType, Arg>? onStartMutation,
     OnSuccessCallback<ReturnType, Arg>? onSuccess,
-    OnErrorCallback<Arg>? onError,
+    OnErrorCallback<ReturnType, Arg>? onError,
     required MutationQueryCallback<ReturnType, Arg> queryFn,
     List<Object>? invalidateQueries,
     List<Object>? refetchQueries,
@@ -97,9 +98,9 @@ class Mutation<ReturnType, Arg> {
   factory Mutation({
     Object? key,
     MutationCache? cache,
-    OnStartMutateCallback<Arg>? onStartMutation,
+    OnStartMutateCallback<ReturnType, Arg>? onStartMutation,
     OnSuccessCallback<ReturnType, Arg>? onSuccess,
-    OnErrorCallback<Arg>? onError,
+    OnErrorCallback<ReturnType, Arg>? onError,
     required MutationQueryCallback<ReturnType, Arg> queryFn,
     List<Object>? invalidateQueries,
     List<Object>? refetchQueries,
@@ -163,13 +164,13 @@ class Mutation<ReturnType, Arg> {
     _emit();
     dynamic startMutationResponse;
     if (_onStartMutation != null) {
-      startMutationResponse = await _onStartMutation!(arg);
+      startMutationResponse = await _onStartMutation!(arg, this);
     }
     // call query fn
     try {
       final res = await _queryFn(arg);
       if (_onSuccess != null) {
-        await _onSuccess!(res, arg);
+        await _onSuccess!(res, arg, this);
       }
 
       _setState(MutationSuccess(data: res));
@@ -187,7 +188,7 @@ class Mutation<ReturnType, Arg> {
       return state;
     } catch (e, trace) {
       if (_onError != null) {
-        await _onError!(arg, e, startMutationResponse);
+        await _onError!(arg, e, startMutationResponse, this);
       }
 
       _setState(MutationError(data: state.data, error: e, stackTrace: trace));

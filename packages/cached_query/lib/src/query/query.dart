@@ -27,8 +27,8 @@ final class Query<T> extends Cacheable<QueryStatus<T>> {
   factory Query({
     required Object key,
     required Future<T> Function() queryFn,
-    OnQueryErrorCallback? onError,
-    OnQuerySuccessCallback<T>? onSuccess,
+    OnQueryErrorCallback<QueryStatus<T>>? onError,
+    OnQuerySuccessCallback<T, QueryStatus<T>>? onSuccess,
     T? initialData,
     QueryConfig<T>? config,
     CachedQuery? cache,
@@ -62,8 +62,8 @@ final class Query<T> extends Cacheable<QueryStatus<T>> {
   }
 
   Query._internal({
-    OnQueryErrorCallback? onError,
-    OnQuerySuccessCallback<T>? onSuccess,
+    OnQueryErrorCallback<QueryStatus<T>>? onError,
+    OnQuerySuccessCallback<T, QueryStatus<T>>? onSuccess,
     required QueryController<T> controller,
   })  : _onError = onError,
         _onSuccess = onSuccess,
@@ -133,8 +133,8 @@ final class Query<T> extends Cacheable<QueryStatus<T>> {
   }
 
   late final BehaviorSubject<QueryStatus<T>> _stateSubject;
-  final OnQuerySuccessCallback<T>? _onSuccess;
-  final OnQueryErrorCallback? _onError;
+  final OnQuerySuccessCallback<T, QueryStatus<T>>? _onSuccess;
+  final OnQueryErrorCallback<QueryStatus<T>>? _onError;
   final QueryController<T> _controller;
 
   void _setState(QueryStatus<T> state) {
@@ -163,7 +163,7 @@ final class Query<T> extends Cacheable<QueryStatus<T>> {
             ),
           );
         case FetchError(:final error, :final stackTrace):
-          _onError?.call(error);
+          _onError?.call(error, this);
           _setState(
             QueryStatus.error(
               timeCreated: state.timeCreated,
@@ -173,11 +173,11 @@ final class Query<T> extends Cacheable<QueryStatus<T>> {
             ),
           );
         case StorageError(:final error, :final stackTrace):
-          _onError?.call(error);
+          _onError?.call(error, this);
         case DataUpdated(:final data):
           _setState(this.state.copyWithData(data as T));
         case Success(:final data, :final timeCreated):
-          _onSuccess?.call(data as T);
+          _onSuccess?.call(data as T, this);
           _setState(
             QueryStatus.success(
               timeCreated: timeCreated,

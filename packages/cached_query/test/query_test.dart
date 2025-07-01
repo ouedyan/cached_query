@@ -97,7 +97,7 @@ void main() {
       String? res;
       final query = Query<String>(
         key: "onSuccess",
-        onSuccess: (dynamic r) => res = r as String,
+        onSuccess: (dynamic r, query) => res = r as String,
         queryFn: () async {
           return response;
         },
@@ -523,7 +523,7 @@ void main() {
       String? error;
       final query = Query<String>(
         key: "error2",
-        onError: (dynamic e) => error = e as String,
+        onError: (dynamic e, query) => error = e as String,
         queryFn: () async {
           throw "this is an error";
         },
